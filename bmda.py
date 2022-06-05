@@ -1,3 +1,4 @@
+from audioop import add
 import numpy as np
 
 class BMDA:
@@ -55,6 +56,7 @@ class BMDA:
                         bivariate_freqs[index1][index2][item1][item2] += 1
                         bivariate_freqs[index2][index1][item2][item1] += 1
 
+
         for index in range(len(univariate_freqs)):
             univariate_freqs[index] /= self.parent_size
 
@@ -87,13 +89,13 @@ class BMDA:
                 dependent_dist11 = self.parent_size * matrix[1][1]
                 chi_square = 0
                 if (independent_dist00 != 0):
-                    chi_square += ((dependent_dist00 - independent_dist00))**2 / independent_dist00
+                    chi_square += ((dependent_dist00 - independent_dist00)**2) / independent_dist00
                 if (independent_dist01 != 0):
-                    chi_square += ((dependent_dist01 - independent_dist01))**2 / independent_dist01
+                    chi_square += ((dependent_dist01 - independent_dist01)**2) / independent_dist01
                 if (independent_dist10 != 0):
-                    chi_square += ((dependent_dist10 - independent_dist10))**2 / independent_dist10
+                    chi_square += ((dependent_dist10 - independent_dist10)**2) / independent_dist10
                 if (independent_dist11 != 0):
-                    chi_square += ((dependent_dist11 - independent_dist11))**2 / independent_dist11
+                    chi_square += ((dependent_dist11 - independent_dist11)**2) / independent_dist11
 
                 if (chi_square >= 3.84):
                     dependencies[index1].append((index2, chi_square))
@@ -115,11 +117,13 @@ class BMDA:
             special_set.append(vertex)
             added_to_graph.append(vertex)
             while True:
+                # Find all dependencies of vertices already in graph and pick highest
                 greatest_dep = None
                 greatest_index = -1
-                for index, dep in enumerate(dependencies):
-                    if index in added_to_graph and len(dep) != 0:
-                        if greatest_dep is None or dep[0][1] >= greatest_dep[1]:
+                for index in range(len(items)):
+                    if index in added_to_graph:
+                        dep = dependencies[index]
+                        if len(dep) != 0 and (greatest_dep is None or dep[0][1] >= greatest_dep[1]):
                             greatest_dep = dep[0]
                             greatest_index = index
                 if greatest_dep is not None and greatest_dep[0] not in added_to_graph:
@@ -135,24 +139,27 @@ class BMDA:
         vertices, edges, special_set = dependency_graph
         individual = [0 for _ in vertices]
         K = vertices[:]
-        for k in vertices:
+        for k in special_set:
             if np.random.rand() <= univariate_freqs[k]:
                 individual[k] = 1
             else:
                 individual[k] = 0
             K.remove(k)
-        
+
         if (len(K) != 0):
             for edge in edges:
                 if (edge[1] in K and edge[0] not in K):
                         in_k = edge[1]
                         not_in_k = edge[0]
-
-                        is1 = bivariate_freqs[in_k][not_in_k][1][individual[not_in_k]] / univariate_freqs[not_in_k]
-                        if np.random.rand() <= is1:
-                            individual[k] = 1
+                        if (individual[not_in_k] == 0):
+                            is1 = bivariate_freqs[in_k][not_in_k][1][individual[not_in_k]] / (1. - univariate_freqs[not_in_k])
                         else:
-                            individual[k] = 0
+                            is1 = bivariate_freqs[in_k][not_in_k][1][individual[not_in_k]] / univariate_freqs[not_in_k]
+                            
+                        if np.random.rand() <= is1:
+                            individual[in_k] = 1
+                        else:
+                            individual[in_k] = 0
 
                         K.remove(in_k)
 
