@@ -85,10 +85,16 @@ class BMDA:
                 dependent_dist10 = self.parent_size * matrix[1][0]
                 independent_dist11 = self.parent_size * (univariate_freqs[index1]) * (univariate_freqs[index2])
                 dependent_dist11 = self.parent_size * matrix[1][1]
-                chi_square = ((dependent_dist00 - independent_dist00))**2 / independent_dist00
-                chi_square += ((dependent_dist01 - independent_dist01))**2 / independent_dist01
-                chi_square += ((dependent_dist10 - independent_dist10))**2 / independent_dist10
-                chi_square += ((dependent_dist11 - independent_dist11))**2 / independent_dist11
+                chi_square = 0
+                if (independent_dist00 != 0):
+                    chi_square += ((dependent_dist00 - independent_dist00))**2 / independent_dist00
+                if (independent_dist01 != 0):
+                    chi_square += ((dependent_dist01 - independent_dist01))**2 / independent_dist01
+                if (independent_dist10 != 0):
+                    chi_square += ((dependent_dist10 - independent_dist10))**2 / independent_dist10
+                if (independent_dist11 != 0):
+                    chi_square += ((dependent_dist11 - independent_dist11))**2 / independent_dist11
+
                 if (chi_square >= 3.84):
                     dependencies[index1].append((index2, chi_square))
             
@@ -172,7 +178,7 @@ class BMDA:
         population = self.generate_random_population(items)
         best_results = []
         for generation in range(self.num_generations):
-            print(f"Generation: {generation}")
+            print(f"Generation: {generation+1}")
             parents = self.parent_selection(population)
             univariate_dist, bivariate_dist = self.calculate_distributions(parents, items)
             dependencies = self.find_dependencies(univariate_dist, bivariate_dist)

@@ -5,12 +5,12 @@ import numpy as np
 # Each item is represented with (weight, value, [dependency_index1, dependency_index2, ...])
 ITEMS = []
 
-NUM_GENERATIONS = 20
+NUM_GENERATIONS = 50
 POPULATION_SIZE = 100
-OFFSPRING_SIZE = 20
+OFFSPRING_SIZE = 30
 BAG_WEIGHT = 0
-PARENT_SIZE = 20
-ITEMS_SIZE = 30
+PARENT_SIZE = 30
+ITEMS_SIZE = 50
 
 def fitness_function(items_bitstring) -> tuple:
     fitness = 0
@@ -39,7 +39,7 @@ def generate_random_items():
     for i in range(ITEMS_SIZE):
         weight = np.random.randint(20)
         sum_weight += weight
-        ITEMS.append((weight, np.random.randint(30), [np.random.randint(ITEMS_SIZE) for _ in range(2)]))
+        ITEMS.append((weight, np.random.randint(30), [np.random.randint(ITEMS_SIZE) for _ in range(np.random.randint(ITEMS_SIZE // 5))]))
     return sum_weight
 
 def main():
@@ -73,6 +73,7 @@ def main():
     plot_fitness(fitness_values_bmda)
     # plot_fitness(fitness_values_boa)
     # print("UMDA best:", fitness_values_umda[-1])
+    print("Maximum bag weight:", BAG_WEIGHT)
     print("BMDA best:", fitness_values_bmda[-1])
     # print("BOA best:", fitness_values_boa[-1])
     
