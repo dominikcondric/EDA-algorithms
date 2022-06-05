@@ -1,15 +1,17 @@
 from bmda import BMDA
 from matplotlib import pyplot as plt
 import numpy as np
+import time
+
 
 # Each item is represented with (weight, value, [dependency_index1, dependency_index2, ...])
 ITEMS = []
 
-NUM_GENERATIONS = 50
-POPULATION_SIZE = 100
-OFFSPRING_SIZE = 20
-BAG_WEIGHT = 0
-PARENT_SIZE = 20
+NUM_GENERATIONS = 30
+POPULATION_SIZE = 200
+OFFSPRING_SIZE = 50
+BAG_WEIGHT = 500
+PARENT_SIZE = 50
 ITEMS_SIZE = 70
 
 def fitness_function(items_bitstring) -> tuple:
@@ -35,16 +37,12 @@ def plot_fitness(fitness_values):
     plt.show()
 
 def generate_random_items():
-    sum_weight = 0
     for i in range(ITEMS_SIZE):
         weight = np.random.randint(20)
-        sum_weight += weight
         ITEMS.append((weight, np.random.randint(30), [np.random.randint(ITEMS_SIZE) for _ in range(np.random.randint(ITEMS_SIZE // 2))]))
-    return sum_weight
 
 def main():
-    sum_weights = generate_random_items()
-    BAG_WEIGHT = 250
+    generate_random_items()
 
     # Univariate
     # umda = UMDA(
@@ -65,16 +63,24 @@ def main():
 
     # )
 
+    # start = time.perf_counter()
     # fitness_values_umda = umda.calculate(ITEMS)
+    # end_umda = time.perf_counter() - start
+
+    start = time.perf_counter()
     fitness_values_bmda = bmda.calculate(ITEMS)
+    end_bmda = time.perf_counter() - start
+
+    # start = time.perf_counter()
     # fitness_values_boa = boa.calculate(ITEMS)
+    # end_boa = time.perf_counter()
 
     # plot_fitness(fitness_values_umda)
     plot_fitness(fitness_values_bmda)
     # plot_fitness(fitness_values_boa)
     # print("UMDA best:", fitness_values_umda[-1])
     print("Maximum bag weight:", BAG_WEIGHT)
-    print("BMDA best:", fitness_values_bmda[-1])
+    print("BMDA best:", fitness_values_bmda[-1], "Elapsed time:", end_bmda)
     # print("BOA best:", fitness_values_boa[-1])
     
 
