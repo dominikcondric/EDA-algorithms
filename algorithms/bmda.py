@@ -2,44 +2,35 @@ import numpy as np
 
 class BMDA:
     class Solution:
-        def __init__(self, bitstring, weight, fitness) -> None:
+        def __init__(self, bitstring, fitness) -> None:
             self.bitstring = bitstring
             self.fitness = fitness
-            self.weight = weight
 
-    def __init__(self, fitness_function, num_generations, population_size, parent_size, offspring_size, bag_capacity) -> None:
+    def __init__(self, fitness_function, validation_function, num_generations, population_size, parent_size, offspring_size) -> None:
         self.num_generations = num_generations
         self.fitness_function = fitness_function
+        self.validation_function = validation_function
         self.offspring_size = offspring_size
         self.parent_size = parent_size
         self.population_size = population_size
-        self.bag_capacity = bag_capacity
 
-    def is_solution_valid(self, solution) -> bool:
-        if solution[0] > self.bag_capacity:
-            return False
+    def generate_single_solution(self, item_probability_vector, nr_of_features) -> Solution:
+        bitstring = []
+        for i in range(nr_of_features):
+            if np.random.rand() <= item_probability_vector[i] and self.validation_function(bitstring):
+                bitstring.append(1)
+            else:
+                bitstring.append(0)
+        
+        return self.Solution(bitstring, self.fitness_function(bitstring))
 
-        return True
+    def generate_random_population(self, nr_of_items):
+        uniform_dist = [0.5 for _ in range(nr_of_items)]
+        return [self.generate_single_solution(uniform_dist, nr_of_items) for _ in range(self.population_size)]
 
-    def generate_single_solution(self, item_probability_vector, items) -> Solution:
-        while (True):
-            bitstring = []
-            for i in range(len(items)):
-                if np.random.rand() <= item_probability_vector[i]:
-                    bitstring.append(1)
-                else:
-                    bitstring.append(0)
-            
-            fitness = self.fitness_function(bitstring)
-            if (self.is_solution_valid(fitness)):
-                return self.Solution(bitstring, *fitness)
-
-    def generate_random_population(self, items) -> list[Solution]:
-        return [self.generate_single_solution([0.5 for _ in items], items) for _ in range(self.population_size)]
-
-    def calculate_distributions(self, parents, items):
-        univariate_freqs = [0 for _ in items]
-        bivariate_freqs = [[np.zeros((2, 2)) for __ in items] for _ in items]
+    def calculate_distributions(self, parents, nr_of_features):
+        univariate_freqs = [0 for _ in range(nr_of_features)]
+        bivariate_freqs = [[np.zeros((2, 2)) for __ in range(nr_of_features)] for _ in range(nr_of_features)]
 
         for solution in parents:
             for index1 in range(len(solution.bitstring)):
@@ -104,8 +95,8 @@ class BMDA:
 
         return dependencies
 
-    def construct_dependency_graph(self, items, dependencies):
-        not_added_to_graph = [i for i in range(len(items))]
+    def construct_dependency_graph(self, nr_of_features, dependencies):
+        not_added_to_graph = [i for i in range(nr_of_features)]
         added_to_graph = []
         edges = []
         special_set = []
@@ -119,7 +110,7 @@ class BMDA:
                 # Find all dependencies of vertices already in graph and pick highest
                 greatest_dep = None
                 greatest_index = -1
-                for index in range(len(items)):
+                for index in range(nr_of_features):
                     if index in added_to_graph:
                         dep = dependencies[index]
                         if len(dep) != 0 and (greatest_dep is None or dep[0][1] >= greatest_dep[1]):
@@ -174,26 +165,25 @@ class BMDA:
             while True:
                 new_individual = self.generate_new_individual(dependency_graph, univariate_freqs, bivariate_freqs)
                 individual_fitness = self.fitness_function(new_individual)
-                if (self.is_solution_valid(individual_fitness)):
-                    offspring.append(self.Solution(new_individual, *individual_fitness))
+                if (self.validation_function(new_individual)):
+                    offspring.append(self.Solution(new_individual, individual_fitness))
                     break
 
         return offspring
 
-    def calculate(self, items: list[tuple]) -> int:
-        population = self.generate_random_population(items)
+    def calculate(self, nr_of_features) -> int:
+        population = self.generate_random_population(nr_of_features)
         best_results = []
         for generation in range(self.num_generations):
-            print(f"Generation: {generation+1}")
             parents = self.parent_selection(population)
-            univariate_dist, bivariate_dist = self.calculate_distributions(parents, items)
+            univariate_dist, bivariate_dist = self.calculate_distributions(parents, nr_of_features)
             dependencies = self.find_dependencies(univariate_dist, bivariate_dist)
-            dependency_graph = self.construct_dependency_graph(items, dependencies)
+            dependency_graph = self.construct_dependency_graph(nr_of_features, dependencies)
             offspring = self.generate_offspring(dependency_graph, univariate_dist, bivariate_dist)
             population += offspring
             population.sort(key=lambda x: x.fitness, reverse=True)
             population = population[:self.population_size]
-            best_results.append((population[0].fitness, population[0].weight))
+            best_results.append(population[0])
 
         return best_results
 

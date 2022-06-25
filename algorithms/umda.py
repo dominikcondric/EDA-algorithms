@@ -2,43 +2,34 @@ import numpy as np
 
 class UMDA:
     class Solution:
-        def __init__(self, bitstring, weight, fitness) -> None:
+        def __init__(self, bitstring, fitness) -> None:
             self.bitstring = bitstring
             self.fitness = fitness
-            self.weight = weight
 
-    def __init__(self, fitness_function, num_generations, population_size, parent_size, offspring_size, bag_capacity) -> None:
+    def __init__(self, fitness_function, validation_function, num_generations, population_size, parent_size, offspring_size) -> None:
         self.num_generations = num_generations
         self.fitness_function = fitness_function
+        self.validation_function = validation_function
         self.offspring_size = offspring_size
         self.parent_size = parent_size
         self.population_size = population_size
-        self.bag_capacity = bag_capacity
 
-    def is_solution_valid(self, solution) -> bool:
-        if solution[0] > self.bag_capacity:
-            return False
+    def generate_single_solution(self, item_probability_vector, nr_of_items) -> Solution:
+        bitstring = []
+        for i in range(nr_of_items):
+            if np.random.rand() <= item_probability_vector[i] and self.validation_function(bitstring):
+                bitstring.append(1)
+            else:
+                bitstring.append(0)
+        
+        return self.Solution(bitstring, self.fitness_function(bitstring))
 
-        return True
+    def generate_random_population(self, nr_of_items):
+        uniform_dist = [0.5 for _ in range(nr_of_items)]
+        return [self.generate_single_solution(uniform_dist, nr_of_items) for _ in range(self.population_size)]
 
-    def generate_single_solution(self, item_probability_vector, items) -> Solution:
-        while (True):
-            bitstring = []
-            for i in range(len(items)):
-                if np.random.rand() <= item_probability_vector[i]:
-                    bitstring.append(1)
-                else:
-                    bitstring.append(0)
-            
-            fitness = self.fitness_function(bitstring)
-            if (self.is_solution_valid(fitness)):
-                return self.Solution(bitstring, *fitness)
-
-    def generate_random_population(self, items):
-        return [self.generate_single_solution([0.5 for _ in items], items) for _ in range(self.population_size)]
-
-    def calculate_distribution(self, parents, items):
-        univariate_freqs = [0 for _ in items]
+    def calculate_distribution(self, parents, nr_of_features):
+        univariate_freqs = [0 for _ in range(nr_of_features)]
 
         for solution in parents:
             for index1 in range(len(solution.bitstring)):
@@ -76,23 +67,22 @@ class UMDA:
             while True:
                 new_individual = self.generate_new_individual(univariate_freqs)
                 individual_fitness = self.fitness_function(new_individual)
-                if (self.is_solution_valid(individual_fitness)):
-                    offspring.append(self.Solution(new_individual, *individual_fitness))
+                if (self.validation_function(new_individual)):
+                    offspring.append(self.Solution(new_individual, individual_fitness))
                     break
 
         return offspring
 
-    def calculate(self, items):
-        population = self.generate_random_population(items)
+    def calculate(self, nr_of_features):
+        population = self.generate_random_population(nr_of_features)
         best_results = []
         for generation in range(self.num_generations):
-            print(f"Generation: {generation+1}")
             parents = self.parent_selection(population)
-            univariate_dist = self.calculate_distribution(parents, items)
+            univariate_dist = self.calculate_distribution(parents, nr_of_features)
             offspring = self.generate_offspring(univariate_dist)
             population += offspring
             population.sort(key=lambda x: x.fitness, reverse=True)
             population = population[:self.population_size]
-            best_results.append((population[0].fitness, population[0].weight))
+            best_results.append(population[0])
 
         return best_results
