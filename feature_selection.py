@@ -61,6 +61,13 @@ def plot_features(axs, original_count, umda_fs_count, bmda_fs_count, boa_fs_coun
     bar = axs.bar(labels, scores, color=colors, width=0.8, align='center')
     axs.bar_label(bar, label_type="center")
 
+def plot_times(axs, no_fs_time, umda_time, bmda_time, boa_time):
+    labels = ["No FS", "UMDA", "BMDA", "BOA"]
+    colors = ["salmon", "yellow", "blue", "green"]
+    scores = [no_fs_time, umda_time, bmda_time, boa_time]
+    bar = axs.bar(labels, scores, color=colors, width=0.8, align='center')
+    axs.bar_label(bar, label_type="center")
+
 def classify(features):
     X, y = current_data[0][:], current_data[1]
     i = 0
@@ -116,9 +123,11 @@ def main():
 
     fig_fitness, axs_fitness = plt.subplots(len(datasets), len(classifiers), sharey=True)
     fig_features, axs_features = plt.subplots(len(datasets), len(classifiers), sharey=True)
+    fig_times, axs_times = plt.subplots(len(datasets), len(classifiers), sharey=True)
 
     fig_fitness.suptitle('Comparison of classification scores before and after FS', fontsize=16)
     fig_features.suptitle('Comparison of number of features before and after FS', fontsize=16)
+    fig_times.suptitle('Comparison of elapsed time for each algorithm', fontsize=16)
 
     i = 0
     for ds in datasets:
@@ -128,10 +137,12 @@ def main():
         j = 0
         axs_fitness[i][0].set_ylabel(name)
         axs_features[i][0].set_ylabel(name)
+        axs_times[i][0].set_ylabel(name)
         for cl_name, classifier in classifiers:
             if i == 0:
                 axs_fitness[i][j].set_title(cl_name)
                 axs_features[i][j].set_title(cl_name)
+                axs_times[i][j].set_title(cl_name)
                 
             current_classifier = classifier
             current_data = data 
@@ -161,6 +172,7 @@ def main():
 
             plot_fitness(axs_fitness[i][j], no_fs_score, umda_fs_score, bmda_fs_score, boa_fs_score)
             plot_features(axs_features[i][j], X.shape[1], umda_feature_count, bmda_feature_count, boa_feature_count)
+            plot_times(axs_times[i][j], no_fs_time, umda_time, bmda_time, boa_time)
             print(f"\t{cl_name}:{' ' * (30 - len(cl_name))}",
                 f"NO FS: {get_float_string(no_fs_score)} ({get_float_string(no_fs_time)}s), ",
                 f"UMDA FS: {get_float_string(umda_fs_score)} ({get_float_string(umda_time)}s), "
