@@ -60,7 +60,6 @@ def plot_features(axs, original_count, umda_fs_count, bmda_fs_count, boa_fs_coun
     bar = axs.bar(labels, scores, color=colors, width=0.8, align='center')
     axs.bar_label(bar, label_type="center")
 
-#def classify(features: list[int]) -> float:
 def classify(features):
     X, y = current_data[0][:], current_data[1]
     i = 0

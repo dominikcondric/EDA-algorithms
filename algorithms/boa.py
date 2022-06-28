@@ -1,5 +1,3 @@
-from audioop import add
-from bayes_optim import Solution
 import numpy as np
 from algorithms.boa_utils.bayesian_network import BayesianNetwork
 import time

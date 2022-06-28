@@ -5,58 +5,14 @@ from algorithms.boa_utils.bic_metric import *
 MAX_INCOMING_EDGE = 100
 
 class BayesianNetwork:
-    # removed setup from params
     def __init__(self, samples, num_of_var):
-        # lets say that gene_lenght is 20??
-        self.num_of_var = num_of_var # old: setup.gene_length
+        self.num_of_var = num_of_var
         self.__network = zeros((self.num_of_var, self.num_of_var))
         self.prior_table = {}
         self.cond_table = {}
         self.samples = samples
         self.init_pi_table()
-        #self.setup = setup
         self.metric = BICMetric()
-
-    # NOT NEEDED
-    def initialize_network(self):
-        for i in range(self.num_of_var):
-            for j in range(i+1,self.num_of_var):
-                if 0.5 < random.random():
-                    self.add_edge(i, j)
-        self.initialize_params()
-    
-    # NOT NEEDED
-    def initialize_params(self):
-        for a in self.get_node_with_no_parents():
-            self.initialize_prior_table(a)
-        for i in range(self.num_of_var):
-            parents = self.get_parents(i)
-            if parents != []:
-               self.initialize_cond_table(i, parents)
-
-    # NOT NEEDED
-    def initialize_prior_table(self, index):
-        self.prior_table[index] = {}
-        card = [0, 1]
-        for c in card:
-            self.prior_table[index][c] = 1.0 / len(card)
-
-    # NOT NEEDED
-    def initialize_cond_table(self, child, parents):
-        pi_table = self.pi_table[child]
-        cardinality = [0, 1]
-        for p in pi_table:
-            self.cond_table[(tuple(parents), tuple(p))] = {}
-            tmp = {}
-            for c in cardinality:
-                tmp[(child, c)] = 1.0 / len(cardinality)
-            if round(sum(list(tmp.values()))-1.0,7) != 0:
-                for k,v in tmp.items():
-                    print(k , v)
-                print ("sum ", sum(tmp.values()))
-                raise Exception("sum of conditional probability does not equal to 1")
-            self.cond_table[(tuple(parents), tuple(p))] = tmp
-
 
     def ref_network(self, col, row):
         return self.__network[col][row]
@@ -77,7 +33,6 @@ class BayesianNetwork:
         self.calc_pi(row)
 
     def estimate_edges(self):
-        # removed self.setup from params
         self.metric.set_samples(self.samples)
         self.parent_card = {}
         for i in range(1, self.num_of_var):
@@ -118,7 +73,6 @@ class BayesianNetwork:
     def learn_univariate(self, node):
         if node in self.prior_table.keys():
             return
-            #raise Exception(str(node) + " is already learned univarate")
         self.prior_table[node] = {}
         for i in [0, 1]:
             self.prior_table[node][i] = float(self.count_samples(node,i)) / len(self.samples)
@@ -174,13 +128,11 @@ class BayesianNetwork:
     def set_conditional(self, child, parents):
         pi_table = self.pi_table[child]
         cardinality = [0, 1]
-        # lets say that alpha is 1
-        alpha = 1 # old: self.setup.alpha
+        alpha = 1 
         for p in pi_table:
             self.cond_table[(tuple(parents), tuple(p))] = {}
             tmp = {}
             for c in cardinality:
-                #num_of_samples_child = self.count_samples(child, c)
                 num_of_samples_parents = self.count_samples_list(parents, p)
                 num_of_samples_all = self.count_samples_all(child, c, parents, p)
                 """Laplace Smoothing"""
@@ -240,7 +192,6 @@ class BayesianNetwork:
         for p in parents:
             if res[p] is None:
                 self.cond_sampling(p, res)
-                #raise Exception(str(p) + " have not been sampled" )
             parents_instance.append(res[p])
         if (tuple(parents), tuple(parents_instance)) \
                 not in self.cond_table.keys():
@@ -259,8 +210,6 @@ class BayesianNetwork:
         if flag:
             raise Exception("conditional sampling failed" )
         return self.get_children(index)
-        #for c in self.get_children(index):
-        #    self.cond_sampling(c, res)
         
     def get_children(self, index):
         result = []

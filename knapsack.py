@@ -1,4 +1,3 @@
-from cProfile import label
 from algorithms.bmda import BMDA
 from algorithms.umda import UMDA
 from algorithms.boa import BOA
@@ -119,7 +118,6 @@ def main():
         OFFSPRING_SIZE,
     )
 
-    # Multivariate
     s = SetupEda()
     boa = BOA(
         fitness_function,

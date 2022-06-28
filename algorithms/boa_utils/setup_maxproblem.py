@@ -21,54 +21,10 @@ class Setup:
     def get_cardinality(self, index):
         return [0,1]
 
-    def evaluate(self, indiv):
-        indiv.fitness = sum(indiv.gene)
-
-    def terminate(self, population):
-        if population[0].fitness > self.current_max:
-            self.unchanged = 0
-            self.current_max = population[0].fitness
-        else:
-            self.unchanged += 1  
-        if population[0].fitness >= self.optimum:
-            return True, True
-        elif self.unchanged > 10:
-            return True, False
-        else:
-            return False, None
-
     def get_elites(self,population):
         res = []
         for i in range(int (self.pop_size*self.elite_rate)):
             res.append(copy.deepcopy(population[i]))
-        return res
-
-    def selection(self, population):
-        if self.sl_method=="truncate":
-            return population[:(int) (self.setup.tr_rate * len(self.population))]
-        elif self.sl_method=="tournament":
-            return self.tournament_selection(population)
-        elif self.sl_method=="roulette":
-            return self.roulette_selection(population)
-        else:
-            raise Exception('selection method: '+self.sl_method+' is not supported')
-
-    def tournament_selection(self, population):
-        raise Exception('selection method: '+self.sl_method+' is not supported')
-
-    def roulette_selection(self, population):
-        res = []
-        fitness_sum = sum(map(lambda x: x.fitness, population))
-        for i in range(self.gene_size):
-            r = random.random()
-            tmp_low = tmp_high = 0
-            for indiv in population:
-                tmp_high += (indiv.fitness / float (fitness_sum))
-                if tmp_low < r and r < tmp_high:
-                    res.append(copy.deepcopy(indiv))
-                    break
-                else:
-                    tmp_low = tmp_high
         return res
     
 class SetupEda(Setup):

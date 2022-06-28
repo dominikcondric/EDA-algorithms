@@ -8,7 +8,6 @@ class BICMetric():
         
     def set_samples(self, samples):
         self.samples = samples
-        #self.setup = setup
         self.prev_likeli_table = {}
         self.prev_cpt_size_table = {}
 
@@ -38,12 +37,8 @@ class BICMetric():
 
     def count_samples(self, i, j, k):
         res = 0
-        #print(self.bn.pi_table.)
-        #candidate = self.bn.pi_table[i][j]
-        #tmp = 
         candidate = self.bn.pi_table.get(i)
         for s in self.samples:
-            #if k is not None and s.gene[i] != [0, 1][k]:
             if k is not None and s.bitstring[i] != [0, 1][k]:
                 continue
             flag = True
