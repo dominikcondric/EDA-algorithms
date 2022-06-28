@@ -15,6 +15,9 @@ import numpy as np
 
 from algorithms.umda import UMDA
 from algorithms.bmda import BMDA
+from algorithms.boa import BOA
+
+from algorithms.boa_utils.setup_maxproblem import *
 
 max_features = 0
 current_classifier = None
@@ -43,21 +46,22 @@ classifiers = [
     ("QuadraticDiscriminantAnalysis", QuadraticDiscriminantAnalysis()),
 ]
 
-def plot_fitness(axs, no_fs_score, umda_fs_score, bmda_fs_score):
-    labels = ["No FS", "UMDA", "BMDA"]
-    colors = ["salmon", "yellow", "blue"]
-    scores = [no_fs_score, umda_fs_score, bmda_fs_score]
+def plot_fitness(axs, no_fs_score, umda_fs_score, bmda_fs_score, boa_fs_score):
+    labels = ["No FS", "UMDA", "BMDA", "BOA"]
+    colors = ["salmon", "yellow", "blue", "green"]
+    scores = [no_fs_score, umda_fs_score, bmda_fs_score, boa_fs_score]
     bar = axs.bar(labels, scores, color=colors, width=0.8, align='center')
     axs.bar_label(bar, fmt="%.4f", label_type="center")
 
-def plot_features(axs, original_count, umda_fs_count, bmda_fs_count):
-    labels = ["No FS", "UMDA", "BMDA"]
-    colors = ["salmon", "yellow", "blue"]
-    scores = [original_count, umda_fs_count, bmda_fs_count]
+def plot_features(axs, original_count, umda_fs_count, bmda_fs_count, boa_fs_count):
+    labels = ["No FS", "UMDA", "BMDA", "BOA"]
+    colors = ["salmon", "yellow", "blue", "green"]
+    scores = [original_count, umda_fs_count, bmda_fs_count, boa_fs_count]
     bar = axs.bar(labels, scores, color=colors, width=0.8, align='center')
     axs.bar_label(bar, label_type="center")
 
-def classify(features: list[int]) -> float:
+#def classify(features: list[int]) -> float:
+def classify(features):
     X, y = current_data[0][:], current_data[1]
     i = 0
     indices_to_delete = []
@@ -87,6 +91,18 @@ bmda = BMDA(
     50,
     5,
     25
+)
+
+s = SetupEda()
+boa = BOA(
+    classify,
+    is_solution_valid,
+    5, # NUM_GENERATIONS
+    50, # POPULATION_SIZE,
+    5, # PARENT_SIZE,
+    25, # OFFSPRING_SIZE,
+    s,
+    # log=True # enable logging
 )
 
 def main():
@@ -122,13 +138,17 @@ def main():
             umda_fs_score = umda_best.fitness
             umda_feature_count = umda_best.bitstring.count(1) # Calculating number of features
 
-            bmda_best = umda.calculate(X.shape[1])[-1]
+            bmda_best = bmda.calculate(X.shape[1])[-1]
             bmda_fs_score = bmda_best.fitness
             bmda_feature_count = bmda_best.bitstring.count(1) # Calculating number of features
 
-            plot_fitness(axs_fitness[i][j], no_fs_score, umda_fs_score, bmda_fs_score)
-            plot_features(axs_features[i][j], X.shape[1], umda_feature_count, bmda_feature_count)
-            print(f"\t{cl_name}:{' ' * (30 - len(cl_name))}NO FS: {no_fs_score}, UMDA FS: {umda_fs_score}, BMDA FS: {bmda_fs_score}")
+            boa_best = boa.calculate(X.shape[1])[-1]
+            boa_fs_score = boa_best.fitness
+            boa_feature_count = boa_best.bitstring.count(1) # Calculating number of features
+
+            plot_fitness(axs_fitness[i][j], no_fs_score, umda_fs_score, bmda_fs_score, boa_fs_score)
+            plot_features(axs_features[i][j], X.shape[1], umda_feature_count, bmda_feature_count, boa_feature_count)
+            print(f"\t{cl_name}:{' ' * (30 - len(cl_name))}NO FS: {no_fs_score}, UMDA FS: {umda_fs_score}, BMDA FS: {bmda_fs_score}, BOA FS: {boa_fs_score}")
             j += 1
         i += 1
         print()
